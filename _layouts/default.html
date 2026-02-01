@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
   <meta name="description"
     content="Documentation and project notes by Diego Barros. Open-source, IT, and technical guides.">
@@ -23,6 +26,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     crossorigin="anonymous">
   <script src="https://diegobarrosa.github.io/diegobarrosaraya-assets/shared-theme.js"></script>
+  <title>Diego Barros Docs</title>
 </head>
 
 <body>
@@ -38,6 +42,7 @@
   </nav>
   <div id="main-content" class="container">
     {{ content }}
+    <div id="mermaid-container"></div>
   </div>
   <footer class="site-footer">
     <div class="footer-links">
@@ -57,39 +62,62 @@
   <!-- Mermaid.js CDN with dynamic theme support -->
   <script src="https://unpkg.com/beautiful-mermaid/dist/beautiful-mermaid.browser.global.js"></script>
   <script>
-    const {renderMermaid, THEMES} = beautifulMermaid;
-    const svg = await renderMermaid(diagram, {
-      bg: '#212121',  // Background
-      fg: '#82AAFF',  // Foreground
-    })
+    // Function to extract Mermaid code from HTML
+    function extractMermaidCodeFromHTML() {
+      const mermaidCodeBlock = document.querySelector('code.language-mermaid');
+      if (mermaidCodeBlock) {
+        return mermaidCodeBlock.textContent;
+      }
+      return null;
+    }
 
-    mermaid.initialize({startOnLoad: true});
+    // Function to render the diagram
+    async function renderDiagram(mermaidCode) {
+      const {renderMermaid, THEMES} = beautifulMermaid;
+      const svg = await renderMermaid(mermaidCode, {
+        bg: '#212121',  // Background
+        fg: '#82AAFF',  // Foreground
+      });
+      // Insert the SVG into the container
+      const container = document.getElementById('mermaid-container');
+      if (container) {
+        container.innerHTML = svg;
+      }
+    }
+
+    // Extract Mermaid code from the HTML content
+    const mermaidCode = extractMermaidCodeFromHTML();
+
+    if (mermaidCode) {
+      renderDiagram(mermaidCode);
+    } else {
+      console.log('No Mermaid diagram found in the HTML content.');
+    }
   </script>
 
+  <!-- Theme management is handled by shared-theme.js -->
+  <!-- Fallback script in case shared-theme.js fails to load -->
+  <script>
+    // Simple fallback theme toggle if shared script fails
+    if (!window.ThemeManager) {
+      const btn = document.querySelector('.theme-toggle');
+      btn && btn.addEventListener('click', () => {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        btn.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+
+        // Dispatch theme change event for mermaid
+        document.dispatchEvent(new CustomEvent('themeChanged'));
+      });
+
+      // Simple initialization
+      const saved = localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', saved);
+      btn && (btn.innerHTML = saved === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>');
+    }
+  </script>
 
 </body>
-
-<!-- Theme management is handled by shared-theme.js -->
-<!-- Fallback script in case shared-theme.js fails to load -->
-<script>
-  // Simple fallback theme toggle if shared script fails
-  if (!window.ThemeManager) {
-    const btn = document.querySelector('.theme-toggle');
-    btn && btn.addEventListener('click', () => {
-      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-      btn.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-
-      // Dispatch theme change event for mermaid
-      document.dispatchEvent(new CustomEvent('themeChanged'));
-    });
-
-    // Simple initialization
-    const saved = localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', saved);
-    btn && (btn.innerHTML = saved === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>');
-  }
-</script>
 
 </html>
